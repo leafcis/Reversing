@@ -83,8 +83,6 @@ PE 헤더는 많은 구조체로 이루어져 있다.
 
 MS에서 PE File Format을 만들 때 당시에 널리 사용되던 DOS 파일에 대한 하위 호환성을 고려해서 만들었다. 그 결과 PE 헤더의 제일 앞부분에는 기존 DOS EXE Header를 확장시킨 IMAGE_DOS_HEADER 구조체가 존재한다.
 
-
-
 ```c
 typedef struct _IMAGE_DOS_HEADER {
     WORD e_magic;			// DOS signature : 4D5A ("MZ")
@@ -111,14 +109,12 @@ typedef struct _IMAGE_DOS_HEADER {
 
 IMAGE_DOS_HEADER 구조체의 크기는 40이다. 이 구조체에서 꼭 알아둬야 할 중요한 멤버는 e_magic과 e_lfanew이다.
 
-
-
 > e_magic : DOS signature (4D5A => ASCII 값 "MZ")
 >
 > e_lfanew : NT header의 옵셋을 표시(파일에 따라 가변적인 값을 가짐)
 
-
-
 모든 PE 파일은 시작 부분(e_magic)에 DOS signature ("MZ")가 존재하고, e_lfanew 값이 가리키는 위치에 NT Header 구조체가 존재해야 한다.
 
 구조체의 이름은 IMAGE_NT_HEADER이다. 
+
+> MZ는 MS에서 DOS 싫애 파일을 설계한 마크 주비코브스키라는 사람의 영문 이니셜이다.
