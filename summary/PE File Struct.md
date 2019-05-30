@@ -1,10 +1,10 @@
-# PE(Portable Executable)
+# PE(Portable Executable) File Structure
 
 
 
 1. PE란?
 2. PE File Format
-3. 
+3. PE Heder
 
 
 
@@ -56,3 +56,69 @@ DOS header부터 Section header까지를 PE 헤더, 그 밑의 Section들을 합
 PE 헤더의 끝부분과 각 섹션의 끝에는 NULL padding이라고 불리우는 영역이 존재하는데, 컴퓨터에서 파일, 메모리, 네트워크 패킷 등을 처리할 때 효율을 높이기 위해 최소 기본 단위 개념을 사용하는 것처럼 PE 파일 에도 같은 개념이 적용된 것이다.
 
 파일/메모리에서 섹션의 사직 위치는 각 파일/메모리의 최소 기본 단위의 배수에 해당하는 위치여야 하고, 빈 공간은 NULL로 채워버린다. 위 그림을 보면 각 세션의 시작 주소가 어떤 규칙에 의해 딱딱 끊어지는 걸 볼 수 있다.
+
+
+
+### VA & RVA
+
+VA랑 RVA 개념에 대해서 알고가자.
+
+VA(Virtual Address)는 프로세스 가상 메모리의 절대 주소를 말하며, RVA(Relative Virtual Address)는 어느 기준 위치(Imagebase)에서부터의 상대주소를 말한다.
+
+VA와 RVA의 관계는 `RVA + ImageBase = VA` 와 같은 식으로 나타낼 수 있다.
+
+PE 헤더 내의 정보는 RVA 형태로 된 것이 많은데, 이는 PE파일이 프로세스 가상 메모리의 특정 위치에 로딩되는 순간 이미 그 위치에 다른 PE 파일이 로딩되어 있을 수 있기 때문이다. 이럴 때 재배치 과정을 통해서 비어 있는 다른 위치에 로딩되어야 하는데, 만약 PE 헤더 정보들이 VA로 되어 있다면 정상적인 엑세스가 이루어지지 않을 것이다. 그러므로 RVA를 통해서 재배치가 일어나도 기준위치에 대한 상대주소가 변하지 않기 때문에 아무런 문제없이 원하는 정보에 엑세스할 수 있게 되는 것이다.
+
+
+
+
+
+## PE Header
+
+PE 헤더는 많은 구조체로 이루어져 있다.
+
+
+
+### DOS Header
+
+MS에서 PE File Format을 만들 때 당시에 널리 사용되던 DOS 파일에 대한 하위 호환성을 고려해서 만들었다. 그 결과 PE 헤더의 제일 앞부분에는 기존 DOS EXE Header를 확장시킨 IMAGE_DOS_HEADER 구조체가 존재한다.
+
+
+
+```c
+typedef struct _IMAGE_DOS_HEADER {
+    WORD e_magic;			// DOS signature : 4D5A ("MZ")
+    WORD e_cblp;
+    WORD e_cp;
+    WORD e_crlc;
+    WORD e_cparhdr;
+    WORD e_minalloc;
+    WORD e_maxalloc;
+    WORD e_ss;
+    WORD e_sp;
+    WORD e_csum;
+    WORD e_ip;
+    WORD e_cs;
+    WORD e_lfarlc;
+    WORD e_ovno;
+    WORD e_res[4];
+    WORD e_oemid;
+    WORD e_oeminfo;
+    WORD e_res2[10];
+    LONG e_lfanew;			// offset to NT header
+} IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
+```
+
+IMAGE_DOS_HEADER 구조체의 크기는 40이다. 이 구조체에서 꼭 알아둬야 할 중요한 멤버는 e_magic과 e_lfanew이다.
+
+
+
+> e_magic : DOS signature (4D5A => ASCII 값 "MZ")
+>
+> e_lfanew : NT header의 옵셋을 표시(파일에 따라 가변적인 값을 가짐)
+
+
+
+모든 PE 파일은 시작 부분(e_magic)에 DOS signature ("MZ")가 존재하고, e_lfanew 값이 가리키는 위치에 NT Header 구조체가 존재해야 한다.
+
+구조체의 이름은 IMAGE_NT_HEADER이다. 
