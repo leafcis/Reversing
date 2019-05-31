@@ -118,3 +118,25 @@ IMAGE_DOS_HEADER 구조체의 크기는 40이다. 이 구조체에서 꼭 알아
 구조체의 이름은 IMAGE_NT_HEADER이다. 
 
 > MZ는 MS에서 DOS 싫애 파일을 설계한 마크 주비코브스키라는 사람의 영문 이니셜이다.
+
+![](https://user-images.githubusercontent.com/36766295/58701817-fb15d080-83de-11e9-991d-38cc21bc2ad2.JPG)
+
+notepad.exe를 hxd를 통해 열어본 결과이다. PE 파일 답게 시작 2바이트는 4D5A("MZ")이며, e_lfanew 값은 000000E0이다. E0000000이 아닌 이유는 Intel 계열 CPU는 자료를 역순으로 저장하는 리틀 엔디언 표기법을 사용하기 때문이다.
+
+이 값을 편경하면 정상 실행되지 않는데, 이는 PE 스펙에 따라서 더 이상 PE 파일이 아니기 때문이다.
+
+
+
+### DOS Stub
+
+DOS Header 밑에는 DOS Stub이 존재한다. DOS Stub의 존재 여부는 옵션이며, 크기도 일정하지 않다. DOS Stub은 코드와 데이터의 혼합으로 이루어져 있으며, notepad.exe에는 DOS Stub가 존재한다.
+
+![](https://user-images.githubusercontent.com/36766295/58702417-bc811580-83e0-11e9-9791-730f07555057.JPG)
+
+이게 바로 notepad.exe의 DOS stub이다. 여기서 파일 옵셋 40~4D영역은 16비트 어셈블리 명령어이며 , 32비트 Windows OS에서는 해당 명령어가 실행되지 않는다. Notepad.exe 파일을 DOS 환경에서 실행하거나, DOS용 디버거를 사용하면 코드를 실행할 수 있다.
+
+해당 코드는 화면에 `This program cannot be run in DOS mode`를 출력하고 종료해버리는데, notepad.exe 파일은 32비트용 PE 파일이지만 MS-DOS 호환 모드를 가지고 있어서 DOS 환경에서 실행하면, DOS EXE 실행코드가 동작하게 되는 것이다.
+
+따라서 이 점을 이용하여 하나의 실행 파일로 DOS와 Windows에서 모두 실행 가능한 파일을 만들 수도 있다.
+
+> DOS 환경에서는 16비트 DOS용 코드가, Windows 환경에서는 32비트 Windows 코드가 각각 실행된다.
